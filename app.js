@@ -16,9 +16,28 @@ app.set('view engine', 'hbs');
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
+// Add headers
+app.use(function (req, res, next) {
+
+  // Website you wish to allow to connect
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
+
+  // Request methods you wish to allow
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+  // Request headers you wish to allow
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+  // Set to true if you need the website to include cookies in the requests sent
+  // to the API (e.g. in case you use sessions)
+  res.setHeader('Access-Control-Allow-Credentials', true);
+
+  // Pass to next layer of middleware
+  next();
+});
 
 // Deal with non application/json requests
-app.use(require('body-parser').json({ type : '*/*' }));
+//app.use(require('body-parser').json({ type : '*/*' }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -28,10 +47,12 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 
 var shopify = require('./routes/shopify');
+var neto = require('./routes/neto2');
 
 app.use('/', index);
 app.use('/users', users);
 app.use('/shopify', shopify);
+app.use('/neto', neto);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

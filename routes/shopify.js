@@ -6,17 +6,18 @@ const cookie = require('cookie');
 const nonce = require('nonce')();
 const querystring = require('querystring');
 var request = require('request-promise');
-const forwardingAddress = "https://7b42e885.ngrok.io";
+const forwardingAddress = "https://82e2997c.ngrok.io";
 
 var apiKey = process.env.SHOPIFY_API_KEY;
 var apiSecret = process.env.SHOPIFY_API_SECRET;
-var scopes = 'write_products';
+var scopes = 'write_products,read_orders';
 var accessToken;
 var shopDomain;
 
 router.get('/install', (req, res) => {
     console.log(apiKey);
     const shop = req.query.shop;
+    shopDomain = req.query.shop;
     if (shop) {
       const state = nonce();
       const redirectUri = forwardingAddress + '/shopify/callback';
@@ -103,6 +104,9 @@ router.get('/callback', (req, res) => {
 
 router.get('/app', function (req, res, next) {
     res.render('app', { title: 'Donohue Test App' });
+    if (accessToken) {
+      res.json(accessToken);
+    }
 });
 
 router.get('/app/products', function (req, res, next) {
@@ -110,7 +114,7 @@ router.get('/app/products', function (req, res, next) {
 
     console.log("access token: " + accessToken)
 
-    let url = 'https://donohueconsultancy.myshopify.com/admin/products.json';
+    let url = 'https://' + shopDomain + '/admin/products.json';
 
     let options = {
         method: 'GET',
@@ -125,19 +129,28 @@ router.get('/app/products', function (req, res, next) {
     request(options)
         .then(function (parsedBody) {
             console.log(parsedBody);
-            res.status(200).send('good');
+            res.status(200);
+            let options = {
+              method: 'GET',
+              uri: url,
+              json: true,
+              headers: {
+                 'X-Shopify-Access-Token': accessToken,
+                  'content-type': 'application/json'
+              }
+          };
         })
         .catch(function (err) {
             console.log(err);
-            res.status(500).send('good');
+            res.status(500).send('bad');
         });
 
 
 });
 
-router.post('/createproduct', function(req, res, next) {
+router.post('/app/createproduct', function(req, res, next) {
 
-    let url = 'https://donohueconsultancy.myshopify.com/admin/products.json';
+    let url = 'https://' + shopDomain + '/admin/products.json';
     console.log(req.body);
     let product = req.body;
     //console.log(JSON.parse(req.body).toString());
@@ -166,5 +179,38 @@ router.post('/createproduct', function(req, res, next) {
         
 
 });
+
+router.get('/app/orders', function(req, res, next) {
+
+  console.log(req.query.id);
+  var orderId = req.query.id;
+  var order;
+
+  let orderUrl = 'https://' + shopDomain + '/admin/orders.json';
+
+  let options = {
+    method: 'GET',
+    uri: orderUrl,
+    json: true,
+    headers: {
+       'X-Shopify-Access-Token': accessToken,
+        'content-type': 'application/json'
+    }
+};
+
+
+request(options)
+    .then(function (parsedBody) {
+        console.log(parsedBody);
+        res.status(200).json(parsedBody);
+    })
+    .catch(function (err) {
+        console.log(err);
+        res.status(500).send('bad');
+    });
+
+});
+
+
 
 module.exports = router;

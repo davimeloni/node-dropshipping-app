@@ -6,9 +6,11 @@
     "content_scripts": [
         {
             "matches": [
-                "*://www.aliexpress.com/*"
+                "*://*.aliexpress.com/*",
+                "*://davidd.neto.com.au/do/WS/NetoAPI",
+                "https://b560fad2.ngrok.io/*"
             ],
-            "js": ["content.js"]
+            "js": ["jquery-3.3.1.min.js", "content.js"]
         }
     ],
     "background": {
